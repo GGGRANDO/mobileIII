@@ -9,6 +9,7 @@ import 'pages/loginPage.dart';
 import 'pages/homePage.dart';
 import 'pages/settingsPage.dart';
 import 'pages/aboutPage.dart';
+import 'pages/mapsPage.dart';
 import 'pages/userListPage.dart';
 import 'pages/userFormPage.dart';
 import 'pages/clientListPage.dart';
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.home: (_) => const HomePage(),
         AppRoutes.settings: (_) => const SettingsPage(),
         AppRoutes.about: (_) => const AboutPage(),
+        AppRoutes.maps: (_) => const MapsPage(),
         AppRoutes.users: (_) => UserListPage(service: userService),
         AppRoutes.userNew: (_) => UserFormPage(service: userService),
         AppRoutes.clients: (_) => ClientListPage(service: clientService),

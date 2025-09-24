@@ -35,17 +35,17 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _loading = false);
 
-    if (ok) {
+    // if (ok) {
       Navigator.pushReplacementNamed(
         context,
         AppRoutes.home,
         arguments: {'username': username},
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Usuário ou senha inválidos')),
-      );
-    }
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Usuário ou senha inválidos')),
+    //   );
+    // }
   }
 
   @override
