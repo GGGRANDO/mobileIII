@@ -55,37 +55,81 @@ class _ClientListPageState extends State<ClientListPage> {
   }
 
   Widget _clientCard(Client c) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _goToEdit(c),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                child: Text(c.name.isNotEmpty ? c.name[0] : '?'),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    c.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(c.email),
+  return Card(
+    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: () => _goToEdit(c),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundImage: c.avatar.isNotEmpty ? NetworkImage(c.avatar) : null,
+                  child: c.avatar.isEmpty ? Text(c.name.isNotEmpty ? c.name[0] : '?') : null,
                 ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: c.active ? Colors.green : Colors.grey, // dot sempre visível
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  c.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(c.email),
               ),
-              const Icon(Icons.chevron_right),
-            ],
-          ),
+            ),
+
+            // ---- IF / ELSE do chip de status ----
+            if (c.active)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Ativo',
+                  style: TextStyle(fontSize: 12, color: Colors.green.shade800),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text('Inativo', style: TextStyle(fontSize: 12)),
+              ),
+
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
