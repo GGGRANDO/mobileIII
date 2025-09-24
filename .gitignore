@@ -1,0 +1,36 @@
+# Flutter/Dart
+build/
+.dart_tool/
+.packages
+.pub-cache/
+flutter_export_environment.sh
+
+# Dependências
+pubspec.lock
+
+# VS Code
+.vscode/
+
+# Sistema
+*.log
+*.lock
+*.tmp
+*.swp
+*.DS_Store
+
+# Android
+/android/.gradle/
+/android/app/build/
+/android/.idea/
+/android/local.properties
+
+# iOS
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/engine/
