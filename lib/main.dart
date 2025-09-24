@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(
-      title: 'Named Routes Login',
+      title: 'Users & Clients',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorSchemeSeed: themeProvider.appBarColor ?? Colors.indigo,
@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.login: (_) => const LoginPage(),
         AppRoutes.home: (_) => const HomePage(),
         AppRoutes.settings: (_) => const SettingsPage(),
-        // AppRoutes.maps: (_) => const MapsPage(),
+        AppRoutes.maps: (_) => const MapsPage(),
         AppRoutes.about: (_) => const AboutPage(),
         AppRoutes.users: (_) => UserListPage(service: UserService()),
         AppRoutes.userNew: (_) => UserFormPage(service: UserService()),
