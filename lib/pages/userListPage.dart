@@ -86,12 +86,6 @@ class _UserListPageState extends State<UserListPage> {
           appBar: AppBar(
             title: const Text('Usuários'),
             backgroundColor: theme.appBarColor,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, AppRoutes.home);
-              },
-            ),
           ),
           floatingActionButton: FloatingActionButton.extended(
             backgroundColor: theme.appBarColor,

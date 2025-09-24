@@ -5,6 +5,7 @@ import '../services/themeProvider.dart';
 import '../services/client.dart';
 import '../models/client.dart';
 import 'clientFormPage.dart';
+import '../routes.dart';
 
 class ClientListPage extends StatefulWidget {
   final ClientService service;
@@ -66,18 +67,60 @@ class _ClientListPageState extends State<ClientListPage> {
             children: [
               CircleAvatar(
                 radius: 28,
-                child: Text(c.name.isNotEmpty ? c.name[0] : '?'),
+                child: Text(
+                  c.nomeFantasia.isNotEmpty ? c.nomeFantasia[0] : '?',
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
-                    c.name,
+                    c.razaoSocial,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(c.email),
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Excluir Cliente'),
+                      content: Text(
+                        'Deseja realmente excluir "${c.razaoSocial}"?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text(
+                            'Excluir',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    try {
+                      await widget.service.deleteClient(c.id!);
+                      if (mounted) _reload();
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erro ao excluir: $e')),
+                        );
+                      }
+                    }
+                  }
+                },
               ),
               const Icon(Icons.chevron_right),
             ],
@@ -97,7 +140,8 @@ class _ClientListPageState extends State<ClientListPage> {
         backgroundColor: themeProvider.appBarColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+          onPressed: () =>
+              Navigator.pushReplacementNamed(context, AppRoutes.home),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -122,7 +166,7 @@ class _ClientListPageState extends State<ClientListPage> {
                 child: TextField(
                   controller: _searchCtrl,
                   decoration: InputDecoration(
-                    hintText: 'Buscar por nome...',
+                    hintText: 'Buscar por razão social...',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _query.isNotEmpty
                         ? IconButton(
@@ -176,12 +220,13 @@ class _ClientListPageState extends State<ClientListPage> {
                       if (_query.isNotEmpty) {
                         clients = clients
                             .where(
-                              (c) => c.name.toLowerCase().contains(
+                              (c) => c.razaoSocial.toLowerCase().contains(
                                 _query.toLowerCase(),
                               ),
                             )
                             .toList();
                       }
+
                       if (clients.isEmpty) {
                         return ListView(
                           children: const [

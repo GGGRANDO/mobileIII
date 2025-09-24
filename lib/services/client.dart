@@ -1,62 +1,48 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/client.dart';
 
 class ClientService {
-  static const String baseUrl =
-      'https://68d33883cc7017eec5464534.mockapi.io/ClientService';
-  ClientService();
+  static const _key = 'clients';
+  List<Client> _clients = [];
 
-  Uri _uri(String path, [Map<String, dynamic>? query]) => Uri.parse(
-    '$baseUrl$path',
-  ).replace(queryParameters: query?.map((k, v) => MapEntry(k, v?.toString())));
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_key);
+    if (jsonString != null) {
+      final List<dynamic> jsonList = json.decode(jsonString);
+      _clients = jsonList.map((e) => Client.fromJson(e)).toList();
+    }
+  }
+
+  Future<void> _save() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = json.encode(_clients.map((c) => c.toJson()).toList());
+    await prefs.setString(_key, jsonString);
+  }
 
   Future<List<Client>> getClients() async {
-    final res = await http.get(_uri('/clients'));
-    if (res.statusCode == 200) {
-      final List list = json.decode(res.body) as List;
-      return list.map((e) => Client.fromJson(e)).toList();
-    }
-    throw Exception('Falha ao carregar clientes (${res.statusCode})');
+    return _clients;
   }
 
-  Future<Client> getClient(String id) async {
-    final res = await http.get(_uri('/clients/$id'));
-    if (res.statusCode == 200) {
-      return Client.fromJson(json.decode(res.body));
-    }
-    throw Exception('Falha ao carregar cliente (${res.statusCode})');
-  }
-
-  Future<Client> createClient(Client client) async {
-    final res = await http.post(
-      _uri('/clients'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(client.toJson()),
+  Future<void> createClient(Client client) async {
+    final newClient = client.copyWith(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
     );
-    if (res.statusCode == 201 || res.statusCode == 200) {
-      return Client.fromJson(json.decode(res.body));
-    }
-    throw Exception('Falha ao criar cliente (${res.statusCode})');
+    _clients.add(newClient);
+    await _save();
   }
 
-  Future<Client> updateClient(Client client) async {
-    if (client.id == null) throw Exception('Cliente sem ID');
-    final res = await http.put(
-      _uri('/clients/${client.id}'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(client.toJson()),
-    );
-    if (res.statusCode == 200) {
-      return Client.fromJson(json.decode(res.body));
+  Future<void> updateClient(Client client) async {
+    final index = _clients.indexWhere((c) => c.id == client.id);
+    if (index != -1) {
+      _clients[index] = client;
+      await _save();
     }
-    throw Exception('Falha ao atualizar cliente (${res.statusCode})');
   }
 
   Future<void> deleteClient(String id) async {
-    final res = await http.delete(_uri('/clients/$id'));
-    if (res.statusCode != 200 && res.statusCode != 204) {
-      throw Exception('Falha ao remover cliente (${res.statusCode})');
-    }
+    _clients.removeWhere((c) => c.id == id);
+    await _save();
   }
 }

@@ -1,64 +1,48 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 
 class UserService {
-  static const String baseUrl =
-      'https://673defff0118dbfe8609718a.mockapi.io/api/v1';
+  static const _key = 'users';
+  List<User> _users = [];
 
-  UserService();
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_key);
+    if (jsonString != null) {
+      final List<dynamic> jsonList = json.decode(jsonString);
+      _users = jsonList.map((e) => User.fromJson(e)).toList();
+    }
+  }
 
-  Uri _uri(String path, [Map<String, dynamic>? query]) => Uri.parse(
-    '$baseUrl$path',
-  ).replace(queryParameters: query?.map((k, v) => MapEntry(k, v?.toString())));
+  Future<void> _save() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = json.encode(_users.map((e) => e.toJson()).toList());
+    await prefs.setString(_key, jsonString);
+  }
 
   Future<List<User>> getUsers() async {
-    final res = await http.get(_uri('/users'));
-    if (res.statusCode == 200) {
-      final body = json.decode(res.body);
-      final List list = body is List ? body : (body['data'] ?? []);
-      return list.map((e) => User.fromJson(e)).toList();
-    }
-    throw Exception('Falha ao carregar usuários (${res.statusCode})');
+    return _users;
   }
 
-  Future<User> getUser(String id) async {
-    final res = await http.get(_uri('/users/$id'));
-    if (res.statusCode == 200) {
-      return User.fromJson(json.decode(res.body));
-    }
-    throw Exception('Falha ao carregar usuário (${res.statusCode})');
-  }
-
-  Future<User> createUser(User user) async {
-    final res = await http.post(
-      _uri('/users'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(user.toJson()),
+  Future<void> createUser(User user) async {
+    final newUser = user.copyWith(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
     );
-    if (res.statusCode == 201 || res.statusCode == 200) {
-      return User.fromJson(json.decode(res.body));
-    }
-    throw Exception('Falha ao criar usuário (${res.statusCode})');
+    _users.add(newUser);
+    await _save();
   }
 
-  Future<User> updateUser(User user) async {
-    if (user.id == null) throw Exception('Usuário sem ID');
-    final res = await http.put(
-      _uri('/users/${user.id}'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(user.toJson()),
-    );
-    if (res.statusCode == 200) {
-      return User.fromJson(json.decode(res.body));
+  Future<void> updateUser(User user) async {
+    final index = _users.indexWhere((u) => u.id == user.id);
+    if (index != -1) {
+      _users[index] = user;
+      await _save();
     }
-    throw Exception('Falha ao atualizar usuário (${res.statusCode})');
   }
 
   Future<void> deleteUser(String id) async {
-    final res = await http.delete(_uri('/users/$id'));
-    if (res.statusCode != 200 && res.statusCode != 204) {
-      throw Exception('Falha ao remover usuário (${res.statusCode})');
-    }
+    _users.removeWhere((u) => u.id == id);
+    await _save();
   }
 }

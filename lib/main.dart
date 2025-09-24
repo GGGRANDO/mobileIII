@@ -1,30 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:login/pages/clientFormPage.dart';
-import 'package:login/pages/clientListPage.dart';
-import 'package:login/pages/userFormPage.dart';
-import 'package:login/services/client.dart';
 import 'package:provider/provider.dart';
-import 'package:login/pages/aboutPage.dart';
-import 'package:login/pages/mapsPage.dart';
-import 'package:login/pages/settingsPage.dart';
-import 'package:login/pages/loginPage.dart';
-import 'package:login/pages/homePage.dart';
-import '../services/user.dart';
-import '../pages/userListPage.dart';
-import 'routes.dart';
 import 'services/themeProvider.dart';
+import 'services/user.dart';
+import 'services/auth.dart';
+import 'services/client.dart';
+import 'routes.dart';
+import 'pages/loginPage.dart';
+import 'pages/homePage.dart';
+import 'pages/settingsPage.dart';
+import 'pages/aboutPage.dart';
+import 'pages/userListPage.dart';
+import 'pages/userFormPage.dart';
+import 'pages/clientListPage.dart';
+import 'pages/clientFormPage.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final userService = UserService();
+  await userService.init();
+  AuthLocal.init(userService);
+
+  final clientService = ClientService();
+  await clientService.init();
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
-      child: const MyApp(),
+      child: MyApp(userService: userService, clientService: clientService),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final UserService userService;
+  final ClientService clientService;
+
+  const MyApp({
+    super.key,
+    required this.userService,
+    required this.clientService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +58,11 @@ class MyApp extends StatelessWidget {
         AppRoutes.login: (_) => const LoginPage(),
         AppRoutes.home: (_) => const HomePage(),
         AppRoutes.settings: (_) => const SettingsPage(),
-        // AppRoutes.maps: (_) => const MapsPage(),
         AppRoutes.about: (_) => const AboutPage(),
-        AppRoutes.users: (_) => UserListPage(service: UserService()),
-        AppRoutes.userNew: (_) => UserFormPage(service: UserService()),
-        AppRoutes.clients: (_) => ClientListPage(service: ClientService()),
-        AppRoutes.clientsNew: (_) => ClientFormPage(service: ClientService()),
+        AppRoutes.users: (_) => UserListPage(service: userService),
+        AppRoutes.userNew: (_) => UserFormPage(service: userService),
+        AppRoutes.clients: (_) => ClientListPage(service: clientService),
+        AppRoutes.clientsNew: (_) => ClientFormPage(service: clientService),
       },
       onUnknownRoute: (settings) =>
           MaterialPageRoute(builder: (_) => const LoginPage()),

@@ -1,6 +1,8 @@
 class User {
-  final String? id; // null enquanto ainda não foi criado
+  final String? id;
   String name;
+  String username;
+  String password;
   String email;
   String avatar;
   DateTime? birthday;
@@ -8,6 +10,8 @@ class User {
   User({
     this.id,
     required this.name,
+    required this.username,
+    required this.password,
     required this.email,
     required this.avatar,
     this.birthday,
@@ -17,6 +21,8 @@ class User {
     return User(
       id: json['id']?.toString(),
       name: json['name'] ?? '',
+      username: json['username'] ?? '',
+      password: json['password'] ?? '',
       email: json['email'] ?? '',
       avatar: json['avatar'] ?? '',
       birthday: json['birthday'] != null && json['birthday'] != ''
@@ -29,6 +35,8 @@ class User {
     return {
       if (id != null) 'id': id,
       'name': name,
+      'username': username,
+      'password': password,
       'email': email,
       'avatar': avatar,
       'birthday': birthday?.toIso8601String(),
@@ -38,6 +46,8 @@ class User {
   User copyWith({
     String? id,
     String? name,
+    String? username,
+    String? password,
     String? email,
     String? avatar,
     DateTime? birthday,
@@ -45,6 +55,8 @@ class User {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
+      username: username ?? this.username,
+      password: password ?? this.password,
       email: email ?? this.email,
       avatar: avatar ?? this.avatar,
       birthday: birthday ?? this.birthday,

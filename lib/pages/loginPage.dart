@@ -14,6 +14,7 @@ class _LoginPageState extends State<LoginPage> {
   final _userCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -22,13 +23,17 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _doLogin() {
+  Future<void> _doLogin() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => _loading = true);
 
     final username = _userCtrl.text.trim();
     final password = _passCtrl.text;
 
-    final ok = AuthLocal.validate(username, password);
+    final ok = await AuthLocal.validate(username, password);
+
+    setState(() => _loading = false);
 
     if (ok) {
       Navigator.pushReplacementNamed(
@@ -123,8 +128,17 @@ class _LoginPageState extends State<LoginPage> {
                           width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
-                            onPressed: _doLogin,
-                            child: const Text('Entrar'),
+                            onPressed: _loading ? null : _doLogin,
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Entrar'),
                           ),
                         ),
                       ],

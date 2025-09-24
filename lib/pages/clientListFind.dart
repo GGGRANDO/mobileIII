@@ -64,21 +64,35 @@ class _ClientListPageState extends State<ClientListPage> {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
                 radius: 28,
-                child: Text(c.name.isNotEmpty ? c.name[0] : '?'),
+                child: Text(
+                  c.nomeFantasia.isNotEmpty ? c.nomeFantasia[0] : '?',
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    c.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(c.email),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      c.nomeFantasia.isNotEmpty
+                          ? c.nomeFantasia
+                          : c.razaoSocial,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text('CNPJ: ${c.cnpj}'),
+                    Text('Regime: ${c.regimeTributario}'),
+                    Text('Email: ${c.email}'),
+                    Text('Telefone: ${c.telefone}'),
+                    Text('Endereço: ${c.endereco}'),
+                  ],
                 ),
               ),
               const Icon(Icons.chevron_right),
@@ -121,7 +135,7 @@ class _ClientListPageState extends State<ClientListPage> {
                 child: TextField(
                   controller: _searchCtrl,
                   decoration: InputDecoration(
-                    hintText: 'Buscar por nome...',
+                    hintText: 'Buscar por nome fantasia ou razão social...',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _query.isNotEmpty
                         ? IconButton(
@@ -177,9 +191,13 @@ class _ClientListPageState extends State<ClientListPage> {
                       if (_query.isNotEmpty) {
                         clients = clients
                             .where(
-                              (c) => c.name.toLowerCase().contains(
-                                _query.toLowerCase(),
-                              ),
+                              (c) =>
+                                  c.nomeFantasia.toLowerCase().contains(
+                                    _query.toLowerCase(),
+                                  ) ||
+                                  c.razaoSocial.toLowerCase().contains(
+                                    _query.toLowerCase(),
+                                  ),
                             )
                             .toList();
                       }
