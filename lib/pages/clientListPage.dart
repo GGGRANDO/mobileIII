@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/themeProvider.dart';
 import '../services/client.dart';
 import '../models/client.dart';
 import 'clientFormPage.dart';
-import '../routes.dart';
 
 class ClientListPage extends StatefulWidget {
   final ClientService service;
@@ -18,14 +15,14 @@ class ClientListPage extends StatefulWidget {
 class _ClientListPageState extends State<ClientListPage> {
   bool _showSplash = true;
   late Future<List<Client>> _future;
-
-  final _searchCtrl = TextEditingController();
+  final _searchCtrl = TextEditingController(); // controller da busca
   String _query = '';
 
   @override
   void initState() {
     super.initState();
     _future = widget.service.getClients();
+    // Simula splash
     Timer(const Duration(seconds: 2), () {
       if (!mounted) return;
       setState(() => _showSplash = false);
@@ -39,17 +36,15 @@ class _ClientListPageState extends State<ClientListPage> {
   }
 
   void _reload() {
-    if (!mounted) return;
     setState(() {
       _future = widget.service.getClients();
     });
   }
 
   Future<void> _goToEdit(Client client) async {
-    final changed = await Navigator.of(context).push<bool>(
+    final changed = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            ClientFormPage(service: widget.service, initial: client),
+        builder: (_) => ClientFormPage(service: widget.service, initial: client),
       ),
     );
     if (changed == true) _reload();
@@ -58,73 +53,25 @@ class _ClientListPageState extends State<ClientListPage> {
   Widget _clientCard(Client c) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
+      child: ListTile(
         onTap: () => _goToEdit(c),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                child: Text(
-                  c.nomeFantasia.isNotEmpty ? c.nomeFantasia[0] : '?',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    c.razaoSocial,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(c.email),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Excluir Cliente'),
-                      content: Text(
-                        'Deseja realmente excluir "${c.razaoSocial}"?',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancelar'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text(
-                            'Excluir',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (confirm == true) {
-                    try {
-                      await widget.service.deleteClient(c.id!);
-                      if (mounted) _reload();
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Erro ao excluir: $e')),
-                        );
-                      }
-                    }
-                  }
-                },
-              ),
-              const Icon(Icons.chevron_right),
-            ],
-          ),
+        leading: CircleAvatar(
+          child: Text(c.nomeFantasia.isNotEmpty ? c.nomeFantasia[0] : '?'),
+        ),
+        title: Text(c.razaoSocial),
+        subtitle: Text(c.email),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () async {
+            try {
+              await widget.service.deleteClient(c.id!);
+              _reload();
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Erro ao excluir: $e')),
+              );
+            }
+          },
         ),
       ),
     );
@@ -132,41 +79,28 @@ class _ClientListPageState extends State<ClientListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Clientes'),
-        backgroundColor: themeProvider.appBarColor,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () =>
-              Navigator.pushReplacementNamed(context, AppRoutes.home),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () =>
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ClientFormPage(service: widget.service),
-              ),
-            ).then((changed) {
-              if (changed == true) _reload();
-            }),
-        icon: const Icon(Icons.business),
-        label: const Text('Novo'),
+      appBar: AppBar(title: const Text('Clientes')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final changed = await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => ClientFormPage(service: widget.service)),
+          );
+          if (changed == true) _reload();
+        },
+        child: const Icon(Icons.add),
       ),
       body: Stack(
         children: [
           Column(
             children: [
+              // Campo de busca
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                padding: const EdgeInsets.all(8),
                 child: TextField(
                   controller: _searchCtrl,
                   decoration: InputDecoration(
-                    hintText: 'Buscar por razão social...',
+                    hintText: "Buscar cliente...",
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _query.isNotEmpty
                         ? IconButton(
@@ -181,67 +115,40 @@ class _ClientListPageState extends State<ClientListPage> {
                     isDense: true,
                   ),
                   onChanged: (text) => setState(() => _query = text.trim()),
-                  onSubmitted: (text) => setState(() => _query = text.trim()),
                 ),
               ),
               Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async => _reload(),
-                  child: FutureBuilder<List<Client>>(
-                    future: _future,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return ListView(
-                          children: [
-                            const SizedBox(height: 120),
-                            Center(
-                              child: Column(
-                                children: [
-                                  const Icon(Icons.error_outline, size: 48),
-                                  const SizedBox(height: 8),
-                                  Text('Erro ao carregar: ${snapshot.error}'),
-                                  const SizedBox(height: 8),
-                                  FilledButton.icon(
-                                    onPressed: _reload,
-                                    icon: const Icon(Icons.refresh),
-                                    label: const Text('Tentar novamente'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      }
+                child: FutureBuilder<List<Client>>(
+                  future: _future,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Erro: ${snapshot.error}'));
+                    }
+                    var clients = snapshot.data ?? [];
 
-                      var clients = snapshot.data ?? [];
-                      if (_query.isNotEmpty) {
-                        clients = clients
-                            .where(
-                              (c) => c.razaoSocial.toLowerCase().contains(
-                                _query.toLowerCase(),
-                              ),
-                            )
-                            .toList();
-                      }
+                    // Aplica filtro
+                    if (_query.isNotEmpty) {
+                      clients = clients.where((c) =>
+                        c.razaoSocial.toLowerCase().contains(_query.toLowerCase()) ||
+                        c.nomeFantasia.toLowerCase().contains(_query.toLowerCase())
+                      ).toList();
+                    }
 
-                      if (clients.isEmpty) {
-                        return ListView(
-                          children: const [
-                            SizedBox(height: 120),
-                            Center(child: Text('Nenhum cliente encontrado')),
-                          ],
-                        );
-                      }
+                    if (clients.isEmpty) {
+                      return const Center(child: Text('Nenhum cliente encontrado'));
+                    }
 
-                      return ListView.builder(
+                    return RefreshIndicator(
+                      onRefresh: () async => _reload(),
+                      child: ListView.builder(
                         itemCount: clients.length,
                         itemBuilder: (_, i) => _clientCard(clients[i]),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -249,20 +156,7 @@ class _ClientListPageState extends State<ClientListPage> {
           if (_showSplash)
             Container(
               color: Colors.white,
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.business, size: 96),
-                  SizedBox(height: 16),
-                  Text(
-                    'Clientes',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 8),
-                  Text('Carregando lista...', style: TextStyle(fontSize: 16)),
-                ],
-              ),
+              child: const Center(child: Text("Carregando lista...")),
             ),
         ],
       ),

@@ -23,7 +23,6 @@ void main() async {
   AuthLocal.init(userService);
 
   final clientService = ClientService();
-  await clientService.init();
 
   runApp(
     ChangeNotifierProvider(
