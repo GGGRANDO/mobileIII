@@ -1,3 +1,4 @@
+// Tela de formulário de cliente (criar/editar)
 import 'package:flutter/material.dart';
 import '../models/client.dart';
 import '../services/client.dart';
@@ -28,12 +29,8 @@ class _ClientFormPageState extends State<ClientFormPage> {
     super.initState();
     _cnpjCtrl = TextEditingController(text: widget.initial?.cnpj ?? '');
     _razaoCtrl = TextEditingController(text: widget.initial?.razaoSocial ?? '');
-    _fantasiaCtrl = TextEditingController(
-      text: widget.initial?.nomeFantasia ?? '',
-    );
-    _regimeCtrl = TextEditingController(
-      text: widget.initial?.regimeTributario ?? '',
-    );
+    _fantasiaCtrl = TextEditingController(text: widget.initial?.nomeFantasia ?? '');
+    _regimeCtrl = TextEditingController(text: widget.initial?.regimeTributario ?? '');
     _emailCtrl = TextEditingController(text: widget.initial?.email ?? '');
     _telefoneCtrl = TextEditingController(text: widget.initial?.telefone ?? '');
     _enderecoCtrl = TextEditingController(text: widget.initial?.endereco ?? '');
@@ -76,9 +73,9 @@ class _ClientFormPageState extends State<ClientFormPage> {
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e')),
+        );
       }
     } finally {
       setState(() => _saving = false);
@@ -91,92 +88,60 @@ class _ClientFormPageState extends State<ClientFormPage> {
 
     return Scaffold(
       appBar: AppBar(title: Text(editing ? 'Editar Cliente' : 'Novo Cliente')),
-      body: AbsorbPointer(
-        absorbing: _saving,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                TextFormField(
-                  controller: _cnpjCtrl,
-                  decoration: const InputDecoration(labelText: 'CNPJ'),
-                  keyboardType: TextInputType.number,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Informe o CNPJ';
-                    if (v.replaceAll(RegExp(r'\D'), '').length != 14)
-                      return 'CNPJ inválido';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _razaoCtrl,
-                  decoration: const InputDecoration(labelText: 'Razão Social'),
-                  validator: (v) => (v == null || v.isEmpty)
-                      ? 'Informe a razão social'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _fantasiaCtrl,
-                  decoration: const InputDecoration(labelText: 'Nome Fantasia'),
-                  validator: (v) => (v == null || v.isEmpty)
-                      ? 'Informe o nome fantasia'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _regimeCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Regime Tributário',
-                  ),
-                  validator: (v) => (v == null || v.isEmpty)
-                      ? 'Informe o regime tributário'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailCtrl,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Informe o email';
-                    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v)
-                        ? null
-                        : 'Email inválido';
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _telefoneCtrl,
-                  decoration: const InputDecoration(labelText: 'Telefone'),
-                  keyboardType: TextInputType.phone,
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Informe o telefone' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _enderecoCtrl,
-                  decoration: const InputDecoration(labelText: 'Endereço'),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Informe o endereço' : null,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: _saving ? null : _save,
-                  icon: _saving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save),
-                  label: Text(editing ? 'Salvar alterações' : 'Criar Cliente'),
-                ),
-              ],
-            ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                controller: _cnpjCtrl,
+                decoration: const InputDecoration(labelText: 'CNPJ'),
+                keyboardType: TextInputType.number,
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Informe o CNPJ' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _razaoCtrl,
+                decoration: const InputDecoration(labelText: 'Razão Social'),
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Informe a razão social' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _fantasiaCtrl,
+                decoration: const InputDecoration(labelText: 'Nome Fantasia'),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _regimeCtrl,
+                decoration: const InputDecoration(labelText: 'Regime Tributário'),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _emailCtrl,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _telefoneCtrl,
+                decoration: const InputDecoration(labelText: 'Telefone'),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _enderecoCtrl,
+                decoration: const InputDecoration(labelText: 'Endereço'),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.save),
+                label: Text(editing ? 'Salvar alterações' : 'Criar Cliente'),
+              ),
+            ],
           ),
         ),
       ),

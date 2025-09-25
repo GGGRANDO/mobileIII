@@ -9,88 +9,248 @@ class AboutPage extends StatefulWidget {
   State<AboutPage> createState() => _AboutPageState();
 }
 
-class _AboutPageState extends State<AboutPage> {
+class _AboutPageState extends State<AboutPage>
+    with SingleTickerProviderStateMixin {
   bool _showSplash = true;
+  Timer? _timer;
+  late final AnimationController _spin;
 
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 2), () {
+
+    _spin = AnimationController(vsync: this, duration: const Duration(seconds: 1))
+      ..repeat();
+
+    _timer = Timer(const Duration(seconds: 2), () {
       if (!mounted) return;
-      setState(() {
-        _showSplash = false;
-      });
+      setState(() => _showSplash = false);
+      _spin.stop();
     });
+  }
+
+  @override
+  void dispose() {
+    // Cancela timer e animação ao sair da tela (pra evitar leaks)
+    _timer?.cancel();
+    _spin.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (_showSplash) {
-      // Tela de splash
       return Scaffold(
-        body: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(24),
+        body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.info, size: 96),
-              SizedBox(height: 16),
-              Text(
-                'Sobre o App',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 240,
+                child: RotationTransition(
+                  turns: _spin,
+                  child: Image.asset(
+                    'assets/GiraGirou-removebg-preview.png',
+                    fit: BoxFit.contain,
+                    // fallback caso imagem não carregue
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.info, size: 96),
+                  ),
+                ),
               ),
-              SizedBox(height: 8),
-              Text('Carregando informações...', style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 20),
+              const Text(
+                'Sobre os guri',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Carregando fotos dos campeões...',
+                style: TextStyle(fontSize: 20),
+              ),
             ],
           ),
         ),
       );
     }
-    final entries = const [
-      ('Gustavo Grando', '177641', 'Análise e desenvolvimento de sistemas'),
-      ('Luis Otavio', '174923', 'Análise e desenvolvimento de sistemas'),
-    ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sobre'),
+        title: const Text('Futuros Olympia'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, AppRoutes.home);
-          },
+          onPressed: () =>
+              Navigator.pushReplacementNamed(context, AppRoutes.home),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const Text(
-            'Desenvolvedores',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          ...entries.map(
-            (e) => Card(
-              elevation: 3,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              child: ListTile(
-                leading: const Icon(Icons.person, size: 32),
-                title: Text(
-                  e.$1,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          const double pad = 20;
+          const double gap = 16;
+
+          // Calcula largura dos cards (se couber, fica 2 colunas; senão 1 coluna[obg gepeto])
+          final double twoColWidth = (constraints.maxWidth - pad * 2 - gap) / 2;
+          final double cardWidth =
+              (twoColWidth >= 260) ? twoColWidth : (constraints.maxWidth - pad * 2);
+
+          return ListView(
+            padding: const EdgeInsets.all(pad),
+            children: [
+              Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/upf.png',
+                    height: 120,
+                    fit: BoxFit.contain,
+                  ),
                 ),
-                subtitle: Text('Matrícula: ${e.$2}\nCurso: ${e.$3}'),
+              ),
+              const SizedBox(height: 12),
+
+              const Text(
+                'Desenvolvedores',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                alignment: WrapAlignment.center,
+                children: [
+                  SizedBox(
+                    width: cardWidth,
+                    child: const _DeveloperCard(
+                      imagePath: 'assets/Kevin Guvrone.png',
+                      name: 'Gustavo Grando',
+                      matricula: '177641',
+                      curso: 'Análise e desenvolvimento de sistemas',
+                    ),
+                  ),
+                  SizedBox(
+                    width: cardWidth,
+                    child: const _DeveloperCard(
+                      imagePath: 'assets/Luis Olleman.png',
+                      name: 'Luis Otavio',
+                      matricula: '174923',
+                      curso: 'Análise e desenvolvimento de sistemas',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+class _DeveloperCard extends StatelessWidget {
+  final String imagePath;
+  final String name;
+  final String matricula;
+  final String curso;
+
+  const _DeveloperCard({
+    required this.imagePath,
+    required this.name,
+    required this.matricula,
+    required this.curso,
+  });
+
+  // abrir imagem full
+  void _openImageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.85),
+      builder: (_) {
+        return Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Aplicativo de gerenciamento de clientes',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-          ),
-        ],
+            Positioned(
+              top: 24,
+              right: 24,
+              child: IconButton(
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.15),
+                ),
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: 'Fechar',
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const double imageHeight = 220;
+
+    return Card(
+      elevation: 3,
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // dar zoom
+            GestureDetector(
+              onTap: () => _openImageDialog(context),
+              child: Container(
+                height: imageHeight,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Center(
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            Text(
+              name,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+
+            Text(
+              'Matrícula: $matricula',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 2),
+
+            Text(
+              'Curso: $curso',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+          ],
+        ),
       ),
     );
   }

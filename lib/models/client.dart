@@ -1,3 +1,4 @@
+
 class Client {
   final String? id;
   final String cnpj;
@@ -18,7 +19,7 @@ class Client {
     required this.telefone,
     required this.endereco,
   });
-
+//atalho de boa prática de programação, feito para alter apenas alguns campos e não precisar criar do zero
   Client copyWith({
     String? id,
     String? cnpj,
@@ -44,19 +45,19 @@ class Client {
   factory Client.fromJson(Map<String, dynamic> json) {
     return Client(
       id: json['id'] as String?,
-      cnpj: json['cnpj'] as String? ?? '',
-      razaoSocial: json['razaoSocial'] as String? ?? '',
-      nomeFantasia: json['nomeFantasia'] as String? ?? '',
-      regimeTributario: json['regimeTributario'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      telefone: json['telefone'] as String? ?? '',
-      endereco: json['endereco'] as String? ?? '',
+      cnpj: json['cnpj'] ?? '',
+      razaoSocial: json['razaoSocial'] ?? '',
+      nomeFantasia: json['nomeFantasia'] ?? '',
+      regimeTributario: json['regimeTributario'] ?? '',
+      email: json['email'] ?? '',
+      telefone: json['telefone'] ?? '',
+      endereco: json['endereco'] ?? '',
     );
   }
-
+//só manda pra api se existir ID
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      if (id != null) 'id': id, 
       'cnpj': cnpj,
       'razaoSocial': razaoSocial,
       'nomeFantasia': nomeFantasia,
